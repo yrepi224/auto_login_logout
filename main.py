@@ -10,7 +10,7 @@ from selenium.webdriver.support import expected_conditions as EC
 
 # 로깅 설정
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s',
-                    handlers=[logging.FileHandler("auto_click.log"), logging.StreamHandler()])
+                    handlers=[logging.FileHandler("auto_login_logout.log"), logging.StreamHandler()])
 
 
 def login_and_check(username, password):
