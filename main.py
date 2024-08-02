@@ -1,4 +1,3 @@
-import random
 import schedule
 import time
 import logging
@@ -35,40 +34,20 @@ def login_and_check(username, password):
 
         # 로그인 확인
         WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.XPATH, "//li[@rel='tab1']"))
+            EC.presence_of_element_located((By.XPATH, "//li[@rel='tab2']"))
         )
         logging.info('로그인에 성공했습니다.')
-        return True
+        return driver
 
     except Exception as e:
         logging.error(f'로그인 오류 발생: {e}')
-        return False
-
-    finally:
-        driver.quit()  # 브라우저 종료
+        driver.quit()
         logging.info('브라우저를 종료했습니다.')
+        return None
 
 
-def click_attendance_button(button_rel, tab_id, username, password):
-    # 크롬 드라이버 경로 설정
-    service = Service('chromedriver.exe')  # 크롬 드라이버 경로를 설정하세요
-    driver = webdriver.Chrome(service=service)
-
+def click_attendance_button(driver, button_rel, tab_id):
     try:
-        # 웹사이트 로그인 페이지로 이동
-        driver.get('http://gw.vaiv.kr/gw/uat/uia/egovLoginUsr.do')  # 로그인 페이지 URL을 설정하세요
-        logging.info('로그인 페이지에 접속했습니다.')
-
-        # 로그인 과정
-        username_input = driver.find_element(By.ID, 'userId')  # 사용자명 입력 필드의 ID
-        password_input = driver.find_element(By.ID, 'userPw')  # 비밀번호 입력 필드의 ID
-        login_button = driver.find_element(By.CLASS_NAME, 'log_btn')  # 로그인 버튼의 CLASS
-
-        username_input.send_keys(username)  # 사용자명 입력
-        password_input.send_keys(password)  # 비밀번호 입력
-        login_button.click()  # 로그인 버튼 클릭
-        logging.info('로그인 정보를 입력하고 로그인 버튼을 클릭했습니다. (비밀번호는 기록되지 않음)')
-
         # 로그인 완료 후 버튼 클릭 대기
         button_xpath = f"//li[@rel='{button_rel}']"
         button = WebDriverWait(driver, 10).until(
@@ -100,33 +79,25 @@ def click_attendance_button(button_rel, tab_id, username, password):
 
 
 def schedule_jobs(username, password):
-    # 월화수목금 8시 54분 ~ 58분 사이의 랜덤한 시간에 출근 버튼 클릭
+    # 월화수목금 8시 57분에 출근 버튼 클릭
     for day in [schedule.every().monday, schedule.every().tuesday, schedule.every().wednesday,
                 schedule.every().thursday, schedule.every().friday]:
-        random_minute = random.randint(54, 58)
-        random_time = f"08:{random_minute:02d}"
-        day.at(random_time).do(
-            lambda: click_attendance_button('tab1', 'portletTemplete_mybox_tab1', username, password))
-        logging.info(f'출근 버튼 클릭 스케줄 설정: {day} at {random_time} (사용자: {username})')
+        day.at("08:57").do(lambda: click_attendance_button(
+            login_and_check(username, password), 'tab1', 'portletTemplete_mybox_tab1'))
+        logging.info(f'출근 버튼 클릭 스케줄 설정: {day} at 08:57 (사용자: {username})')
 
-    # 월화수목금 6시 3분에 퇴근 버튼 클릭
+    # 월화수목금 6시 03분에 퇴근 버튼 클릭
     for day in [schedule.every().monday, schedule.every().tuesday, schedule.every().wednesday,
                 schedule.every().thursday, schedule.every().friday]:
-        day.at("18:03").do(lambda: click_attendance_button('tab2', 'portletTemplete_mybox_tab2', username, password))
+        day.at("18:03").do(lambda: click_attendance_button(
+            login_and_check(username, password), 'tab2', 'portletTemplete_mybox_tab2'))
         logging.info(f'퇴근 버튼 클릭 스케줄 설정: {day} at 18:03 (사용자: {username})')
 
 
 def main():
-    while True:
-        # 사용자로부터 아이디와 패스워드를 입력받음
-        username = input("아이디를 입력하세요: ")
-        password = input("패스워드를 입력하세요: ")
-
-        # 로그인 확인
-        if login_and_check(username, password):
-            break
-        else:
-            print("로그인 실패. 다시 시도하세요.")
+    # 사용자로부터 아이디와 패스워드를 입력받음
+    username = input("아이디를 입력하세요: ")
+    password = input("패스워드를 입력하세요: ")
 
     schedule_jobs(username, password)
     while True:
