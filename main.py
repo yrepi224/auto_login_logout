@@ -1,3 +1,4 @@
+import random
 import schedule
 import time
 import logging
@@ -79,12 +80,14 @@ def click_attendance_button(driver, button_rel, tab_id):
 
 
 def schedule_jobs(username, password):
-    # 월화수목금 8시 57분에 출근 버튼 클릭
+    # 월화수목금 8시 55분 ~ 8시 58분 사이에 출근 버튼 클릭
     for day in [schedule.every().monday, schedule.every().tuesday, schedule.every().wednesday,
                 schedule.every().thursday, schedule.every().friday]:
-        day.at("08:57").do(lambda: click_attendance_button(
+        random_minute = random.randint(55, 58)
+        random_time = f"08:{random_minute:02d}"
+        day.at(random_time).do(lambda: click_attendance_button(
             login_and_check(username, password), 'tab1', 'portletTemplete_mybox_tab1'))
-        logging.info(f'출근 버튼 클릭 스케줄 설정: {day} at 08:57 (사용자: {username})')
+        logging.info(f'출근 버튼 클릭 스케줄 설정: {day} at {random_time} (사용자: {username})')
 
     # 월화수목금 6시 03분에 퇴근 버튼 클릭
     for day in [schedule.every().monday, schedule.every().tuesday, schedule.every().wednesday,
